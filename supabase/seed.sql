@@ -32,13 +32,16 @@ with first_user as (
   from selected_workspace
   on conflict do nothing
   returning id, workspace_id
-), selected_project as (
-  select id, workspace_id from project_insert
-  union all
+), project_existing as (
   select p.id, p.workspace_id
   from public.projects p
   join selected_workspace sw on sw.id = p.workspace_id
   order by p.created_at asc
+  limit 1
+), selected_project as (
+  select id, workspace_id from project_insert
+  union all
+  select id, workspace_id from project_existing
   limit 1
 )
 insert into public.tasks (
