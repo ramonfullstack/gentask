@@ -27,5 +27,16 @@ export function getEnv(): Env {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME
   });
 
+  if (isProd) {
+    const invalidUrl = cachedEnv.NEXT_PUBLIC_SUPABASE_URL.includes("localhost");
+    const invalidAnonKey = cachedEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY === "public-anon-key";
+
+    if (invalidUrl || invalidAnonKey) {
+      throw new Error(
+        "Supabase env inválida em produção. Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY reais na Vercel e faça redeploy."
+      );
+    }
+  }
+
   return cachedEnv;
 }
