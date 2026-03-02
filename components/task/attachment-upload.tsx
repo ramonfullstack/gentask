@@ -9,11 +9,11 @@ export function AttachmentUpload({ taskId, workspaceId }: { taskId: string; work
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
   const uploadFile = async (file: File) => {
     setError(null);
     setIsUploading(true);
+    const supabase = createClient();
 
     const path = `${workspaceId}/${taskId}/${Date.now()}-${file.name}`;
     const { error: storageError } = await supabase.storage.from("task-attachments").upload(path, file, {

@@ -34,7 +34,6 @@ const labels: Record<AuthMode, { title: string; submit: string; switchText: stri
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
-  const supabase = createClient();
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -49,6 +48,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   const onSubmit = async (values: AuthInput) => {
     setError(null);
+    const supabase = createClient();
 
     if (mode === "signup") {
       const { error: signupError } = await supabase.auth.signUp({
