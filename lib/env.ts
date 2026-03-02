@@ -11,14 +11,19 @@ type Env = z.infer<typeof envSchema>;
 
 let cachedEnv: Env | null = null;
 
+function isBuildTimePhase(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build";
+}
+
 export function getEnv(): Env {
   if (cachedEnv) {
     return cachedEnv;
   }
 
   const isProd = process.env.NODE_ENV === "production";
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? (isProd ? undefined : "http://localhost:54321");
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? (isProd ? undefined : "public-anon-key");
+  const allowBuildFallback = isBuildTimePhase();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? (isProd && !allowBuildFallback ? undefined : "http://localhost:54321");
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? (isProd && !allowBuildFallback ? undefined : "public-anon-key");
 
   cachedEnv = envSchema.parse({
     NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
@@ -27,7 +32,7 @@ export function getEnv(): Env {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME
   });
 
-  if (isProd) {
+  if (isProd && !allowBuildFallback) {
     const invalidUrl = cachedEnv.NEXT_PUBLIC_SUPABASE_URL.includes("localhost");
     const invalidAnonKey = cachedEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY === "public-anon-key";
 
