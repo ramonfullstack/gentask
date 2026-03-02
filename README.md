@@ -23,11 +23,25 @@ SaaS de gestão de tarefas com foco em **Detalhe da Tarefa + Activity Feed**, co
 ## Estrutura
 
 - `app/`: rotas Next.js App Router
-- `components/`: UI e blocos de domínio (task/activity/comments)
+- `components/layout`: `AppShell`, `SidebarNav`, `Topbar`, `PageContainer`
+- `components/shared`: `SectionCard`
+- `components/task/`: módulos de Kanban, lista de tarefas, configurações de workflow, comentários e anexos
 - `hooks/`: hooks com TanStack Query
 - `lib/`: clients Supabase, utils e validações Zod
 - `supabase/migrations`: migrations versionadas com RLS/policies
 - `supabase/seed.sql`: seed inicial
+
+## Mapa de rotas
+
+- `/app` -> visão geral
+- `/app/kanban` -> quadro Kanban dedicado
+- `/app/tasks` -> lista de tarefas com filtros, busca e ordenação
+- `/app/tasks/:taskId` -> detalhe de tarefa + activity feed
+- `/app/settings/workflow` -> gestão de etapas (CRUD + reorder + ativação + exclusão com migração)
+- `/app/settings/project` -> configurações gerais do projeto
+
+Compatibilidade:
+- `/app/projects/:projectId` redireciona para `/app/kanban?project=:projectId`.
 
 ## Variáveis de ambiente
 
@@ -109,6 +123,8 @@ Pipeline GitHub Actions em `.github/workflows/ci.yml` com etapas:
 2. Lint (`npm run lint`)
 3. Test (`npm run test`)
 4. Build (`npm run build`)
+
+Inclui teste de navegação entre rotas principais no e2e (`tests/e2e/navigation.spec.ts`).
 
 ## Observações técnicas
 

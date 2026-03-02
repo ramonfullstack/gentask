@@ -56,14 +56,13 @@ where ws.project_id = t.project_id
   and t.stage_id is null;
 
 update public.tasks t
-set stage_id = ws.id
-from lateral (
-  select id
-  from public.workflow_stages
-  where project_id = t.project_id
-  order by position asc
+set stage_id = (
+  select ws.id
+  from public.workflow_stages ws
+  where ws.project_id = t.project_id
+  order by ws.position asc
   limit 1
-) ws
+)
 where t.stage_id is null;
 
 alter table public.tasks alter column stage_id set not null;

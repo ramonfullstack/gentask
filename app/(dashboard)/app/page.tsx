@@ -1,61 +1,49 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Route } from "next";
+import { PageContainer } from "@/components/layout/page-container";
+import { SectionCard } from "@/components/shared/section-card";
+import { getWorkspaceContext } from "@/lib/projects/context";
 
 export default async function DashboardHomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const context = await getWorkspaceContext();
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: membership } = await supabase
-    .from("workspace_members")
-    .select("workspace_id")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
-
-  if (!membership?.workspace_id) {
+  if (!context.currentProject) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Nenhum workspace encontrado</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Crie um workspace via seed inicial ou painel SQL do Supabase.</p>
-        </CardContent>
-      </Card>
+      <PageContainer title="Visão Geral" description="Nenhum projeto encontrado no workspace atual.">
+        <SectionCard title="Sem projetos" description="Execute as migrations + seed no Supabase para criar o projeto inicial.">
+          <p className="text-sm text-muted-foreground">Após criar um projeto, você poderá acessar Kanban, Tarefas e Configurações.</p>
+        </SectionCard>
+      </PageContainer>
     );
   }
 
-  const { data: projects } = await supabase
-    .from("projects")
-    .select("id, name, description")
-    .eq("workspace_id", membership.workspace_id)
-    .order("created_at", { ascending: false });
-
   return (
-    <section className="space-y-4">
-      <h1 className="font-[family-name:var(--font-space-grotesk)] text-3xl font-semibold tracking-tight">Projetos</h1>
-      <div className="grid gap-4 md:grid-cols-2">
-        {projects?.map((project) => (
-          <Link key={project.id} href={`/app/projects/${project.id}`}>
-            <Card className="h-full transition hover:-translate-y-0.5 hover:border-primary/40">
-              <CardHeader>
-                <CardTitle>{project.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{project.description}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+    <PageContainer title="Visão Geral" description="Acesse rapidamente os principais módulos de trabalho do projeto.">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Link href={"/app/kanban" as Route}>
+          <SectionCard title="Kanban" description="Visual do fluxo e movimentação entre etapas.">
+            <p className="text-sm text-muted-foreground">Abrir quadro dinâmico</p>
+          </SectionCard>
+        </Link>
+
+        <Link href={"/app/tasks" as Route}>
+          <SectionCard title="Tarefas" description="Lista com busca, filtros e acesso rápido aos detalhes.">
+            <p className="text-sm text-muted-foreground">Abrir lista de tarefas</p>
+          </SectionCard>
+        </Link>
+
+        <Link href={"/app/settings/workflow" as Route}>
+          <SectionCard title="Workflow" description="Gerencie etapas, ordem e políticas do fluxo.">
+            <p className="text-sm text-muted-foreground">Abrir configurações de workflow</p>
+          </SectionCard>
+        </Link>
+
+        <Link href={"/app/settings/project" as Route}>
+          <SectionCard title="Projeto" description="Informações e configurações gerais do projeto atual.">
+            <p className="text-sm text-muted-foreground">Abrir configurações de projeto</p>
+          </SectionCard>
+        </Link>
       </div>
-    </section>
+    </PageContainer>
   );
 }

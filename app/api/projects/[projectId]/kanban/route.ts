@@ -48,7 +48,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
   const { data: tasks, error: tasksError } = await supabase
     .from("tasks")
-    .select("id,title,description,stage_id,priority,due_date,labels,updated_at")
+    .select("id,title,description,stage_id,priority,due_date,labels,updated_at,assignee_id,assignee:profiles!tasks_assignee_id_fkey(id,full_name)")
     .eq("project_id", projectId)
     .order("updated_at", { ascending: false });
 
@@ -59,7 +59,11 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   return NextResponse.json({
     project,
     stages: stages ?? [],
-    tasks: tasks ?? [],
+    tasks:
+      (tasks ?? []).map((task) => ({
+        ...task,
+        assignee: Array.isArray(task.assignee) ? task.assignee[0] ?? null : task.assignee
+      })) ?? [],
     canManageStages
   });
 }

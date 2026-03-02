@@ -5,7 +5,6 @@ import Link from "next/link";
 import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { useCreateTask, useMoveTaskStage } from "@/hooks/use-task-mutations";
 import { type KanbanTask, useProjectKanban } from "@/hooks/use-project-kanban";
-import { StageManagement } from "@/components/task/stage-management";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,9 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 type ProjectKanbanProps = {
   projectId: string;
   projectName: string;
+  showHeader?: boolean;
 };
 
-export function ProjectKanban({ projectId, projectName }: ProjectKanbanProps) {
+export function ProjectKanban({ projectId, projectName, showHeader = true }: ProjectKanbanProps) {
   const { data, isLoading, error } = useProjectKanban(projectId);
   const createTask = useCreateTask(projectId);
   const moveTaskStage = useMoveTaskStage(projectId);
@@ -90,10 +90,12 @@ export function ProjectKanban({ projectId, projectName }: ProjectKanbanProps) {
 
   return (
     <section className="space-y-4">
-      <header className="space-y-2">
-        <h1 className="font-[family-name:var(--font-space-grotesk)] text-3xl font-semibold tracking-tight">{projectName}</h1>
-        <p className="text-sm text-muted-foreground">Kanban dinâmico com etapas gerenciáveis por projeto.</p>
-      </header>
+      {showHeader ? (
+        <header className="space-y-2">
+          <h1 className="font-[family-name:var(--font-space-grotesk)] text-3xl font-semibold tracking-tight">{projectName}</h1>
+          <p className="text-sm text-muted-foreground">Kanban dinâmico com etapas gerenciáveis por projeto.</p>
+        </header>
+      ) : null}
 
       <form onSubmit={onCreateTask} className="grid gap-3 rounded-xl border border-border/70 bg-card/70 p-4 md:grid-cols-[1.2fr_1.2fr_180px_180px_auto]">
         <Input placeholder="Título da tarefa" value={title} onChange={(event) => setTitle(event.target.value)} minLength={2} required />
@@ -169,7 +171,6 @@ export function ProjectKanban({ projectId, projectName }: ProjectKanbanProps) {
         </div>
       </div>
 
-      <StageManagement projectId={projectId} stages={data.stages} tasks={data.tasks} canManageStages={data.canManageStages} />
     </section>
   );
 }

@@ -18,6 +18,8 @@ export type KanbanTask = {
   title: string;
   description: string | null;
   stage_id: string;
+  assignee_id: string | null;
+  assignee: { id: string; full_name: string | null } | null;
   priority: "low" | "medium" | "high" | "urgent";
   due_date: string | null;
   labels: string[];
