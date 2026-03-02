@@ -47,9 +47,9 @@ with first_user as (
 insert into public.tasks (
   workspace_id,
   project_id,
+  stage_id,
   title,
   description,
-  status,
   priority,
   assignee_id,
   due_date,
@@ -60,9 +60,9 @@ insert into public.tasks (
 select
   sp.workspace_id,
   sp.id,
+  ws.id,
   'Implementar Activity Feed',
   'Criar timeline com comentários, anexos e alterações de status.',
-  'in_progress'::public.task_status,
   'high'::public.task_priority,
   fu.id,
   (now() + interval '7 days')::date,
@@ -74,6 +74,7 @@ select
   ),
   fu.id
 from selected_project sp
+join public.workflow_stages ws on ws.project_id = sp.id and ws.slug = 'pull-request'
 join first_user fu on true
 where not exists (
   select 1

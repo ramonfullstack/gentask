@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const { data, error } = await supabase
     .from("tasks")
     .select(
-      "id, workspace_id, title, description, status, priority, due_date, labels, checklist, project:projects(id,name), assignee:profiles!tasks_assignee_id_fkey(id,full_name)"
+      "id, workspace_id, project_id, title, description, stage_id, priority, due_date, labels, checklist, project:projects(id,name), stage:workflow_stages!tasks_stage_id_fkey(id,name,slug,color,position,is_final,is_active), assignee:profiles!tasks_assignee_id_fkey(id,full_name)"
     )
     .eq("id", taskId)
     .single();
@@ -22,7 +22,21 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: "Tarefa não encontrada" }, { status: 404 });
   }
 
-  return NextResponse.json(data);
+  const { data: availableStages } = await supabase
+    .from("workflow_stages")
+    .select("id,name,slug,color,position,is_final,is_active")
+    .eq("project_id", data.project_id)
+    .order("position", { ascending: true });
+
+  const normalizedStage = Array.isArray(data.stage) ? data.stage[0] : data.stage;
+  const normalizedAssignee = Array.isArray(data.assignee) ? data.assignee[0] : data.assignee;
+
+  return NextResponse.json({
+    ...data,
+    stage: normalizedStage,
+    assignee: normalizedAssignee,
+    available_stages: availableStages ?? []
+  });
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
@@ -40,39 +54,46 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { data: previousTask } = await supabase
     .from("tasks")
-    .select("workspace_id, status, priority, assignee_id, due_date, labels, checklist")
+    .select("id,project_id,workspace_id")
     .eq("id", taskId)
     .single();
+
+  if (!previousTask) {
+    return NextResponse.json({ message: "Tarefa não encontrada" }, { status: 404 });
+  }
+
+  if (payload.stageId !== undefined) {
+    const { data: stage } = await supabase
+      .from("workflow_stages")
+      .select("id")
+      .eq("id", payload.stageId)
+      .eq("project_id", previousTask.project_id)
+      .maybeSingle();
+
+    if (!stage) {
+      return NextResponse.json({ message: "Etapa inválida para este projeto" }, { status: 400 });
+    }
+  }
 
   const updatePayload: Record<string, unknown> = {};
   if (payload.title !== undefined) updatePayload.title = payload.title;
   if (payload.description !== undefined) updatePayload.description = payload.description;
-  if (payload.status !== undefined) updatePayload.status = payload.status;
+  if (payload.stageId !== undefined) updatePayload.stage_id = payload.stageId;
   if (payload.priority !== undefined) updatePayload.priority = payload.priority;
   if (payload.assigneeId !== undefined) updatePayload.assignee_id = payload.assigneeId;
   if (payload.dueDate !== undefined) updatePayload.due_date = payload.dueDate;
   if (payload.labels !== undefined) updatePayload.labels = payload.labels;
   if (payload.checklist !== undefined) updatePayload.checklist = payload.checklist;
 
-  const { data: updatedTask, error } = await supabase.from("tasks").update(updatePayload).eq("id", taskId).select("id").single();
+  const { data: updatedTask, error } = await supabase
+    .from("tasks")
+    .update(updatePayload)
+    .eq("id", taskId)
+    .select("id,project_id,stage_id")
+    .single();
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  if (previousTask && user) {
-    await supabase.from("task_activity").insert({
-      workspace_id: previousTask.workspace_id,
-      task_id: taskId,
-      actor_id: user.id,
-      event_type: "task.updated",
-      old_value: previousTask,
-      new_value: payload
-    });
   }
 
   return NextResponse.json(updatedTask);

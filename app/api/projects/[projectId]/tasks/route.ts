@@ -33,14 +33,44 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const payload = parsed.data;
 
+  let stageId = payload.stageId ?? null;
+
+  if (!stageId) {
+    const { data: firstActiveStage } = await supabase
+      .from("workflow_stages")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("is_active", true)
+      .order("position", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!firstActiveStage) {
+      return NextResponse.json({ message: "Projeto sem etapas ativas para criar tarefas" }, { status: 400 });
+    }
+
+    stageId = firstActiveStage.id;
+  } else {
+    const { data: stage } = await supabase
+      .from("workflow_stages")
+      .select("id")
+      .eq("id", stageId)
+      .eq("project_id", projectId)
+      .maybeSingle();
+
+    if (!stage) {
+      return NextResponse.json({ message: "Etapa inválida para este projeto" }, { status: 400 });
+    }
+  }
+
   const { data, error } = await supabase
     .from("tasks")
     .insert({
       workspace_id: project.workspace_id,
       project_id: projectId,
+      stage_id: stageId,
       title: payload.title,
       description: payload.description,
-      status: payload.status,
       priority: payload.priority,
       assignee_id: payload.assigneeId,
       due_date: payload.dueDate,

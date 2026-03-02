@@ -6,7 +6,25 @@ export type TaskDetail = {
   id: string;
   title: string;
   description: string | null;
-  status: "todo" | "in_progress" | "review" | "done";
+  stage_id: string;
+  stage: {
+    id: string;
+    name: string;
+    slug: string;
+    color: string;
+    position: number;
+    is_final: boolean;
+    is_active: boolean;
+  };
+  available_stages: {
+    id: string;
+    name: string;
+    slug: string;
+    color: string;
+    position: number;
+    is_final: boolean;
+    is_active: boolean;
+  }[];
   priority: "low" | "medium" | "high" | "urgent";
   due_date: string | null;
   labels: string[];

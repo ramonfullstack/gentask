@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-export const taskStatusSchema = z.enum(["todo", "in_progress", "review", "done"]);
 export const taskPrioritySchema = z.enum(["low", "medium", "high", "urgent"]);
 
 export const checklistItemSchema = z.object({
@@ -12,7 +11,7 @@ export const checklistItemSchema = z.object({
 export const createTaskSchema = z.object({
   title: z.string().min(2),
   description: z.string().nullable().optional(),
-  status: taskStatusSchema.default("todo"),
+  stageId: z.string().uuid().optional(),
   priority: taskPrioritySchema.default("medium"),
   assigneeId: z.string().uuid().nullable().optional(),
   dueDate: z.string().date().nullable().optional(),
@@ -23,7 +22,7 @@ export const createTaskSchema = z.object({
 export const updateTaskSchema = z.object({
   title: z.string().min(2).optional(),
   description: z.string().nullable().optional(),
-  status: taskStatusSchema.optional(),
+  stageId: z.string().uuid().optional(),
   priority: taskPrioritySchema.optional(),
   assigneeId: z.string().uuid().nullable().optional(),
   dueDate: z.string().date().nullable().optional(),

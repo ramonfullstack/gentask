@@ -14,12 +14,12 @@ type TaskEditorProps = {
 
 export function TaskEditor({ task }: TaskEditorProps) {
   const router = useRouter();
-  const updateTask = useUpdateTask(task.id);
-  const deleteTask = useDeleteTask(task.id);
+  const updateTask = useUpdateTask(task.id, task.project.id);
+  const deleteTask = useDeleteTask(task.id, task.project.id);
 
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
-  const [status, setStatus] = useState(task.status);
+  const [stageId, setStageId] = useState(task.stage_id);
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.due_date ?? "");
   const [labels, setLabels] = useState(task.labels.join(", "));
@@ -45,7 +45,7 @@ export function TaskEditor({ task }: TaskEditorProps) {
     await updateTask.mutateAsync({
       title,
       description: description || null,
-      status,
+      stageId,
       priority,
       dueDate: dueDate || null,
       labels: labels
@@ -77,14 +77,15 @@ export function TaskEditor({ task }: TaskEditorProps) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <select
-          value={status}
-          onChange={(event) => setStatus(event.target.value as TaskDetail["status"])}
+          value={stageId}
+          onChange={(event) => setStageId(event.target.value)}
           className="h-10 rounded-md border border-input bg-card px-3 text-sm"
         >
-          <option value="todo">Todo</option>
-          <option value="in_progress">In progress</option>
-          <option value="review">Review</option>
-          <option value="done">Done</option>
+          {task.available_stages.map((stage) => (
+            <option key={stage.id} value={stage.id}>
+              {stage.name}
+            </option>
+          ))}
         </select>
 
         <select

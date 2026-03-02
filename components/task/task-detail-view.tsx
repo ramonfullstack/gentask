@@ -31,7 +31,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
       <Card className="h-fit">
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge>{task.status}</Badge>
+            <Badge style={{ backgroundColor: task.stage.color }}>{task.stage.name}</Badge>
             <Badge variant="secondary">{task.priority}</Badge>
             {task.labels.map((label) => (
               <Badge key={label} variant="outline">

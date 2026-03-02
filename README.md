@@ -14,9 +14,10 @@ SaaS de gestão de tarefas com foco em **Detalhe da Tarefa + Activity Feed**, co
 
 - Auth com Supabase (`signup`, `login`, `logout`)
 - Multi-tenant por workspace com papéis `admin` e `member`
-- Projects + tarefas com status, prioridade, responsável, `due date`, labels e checklist
+- Projects + tarefas com etapas dinâmicas, prioridade, responsável, `due date`, labels e checklist
 - Comentários e anexos por tarefa
 - Activity timeline por tarefa (`actor`, `eventType`, `old/new`, `createdAt`)
+- Gestão de etapas por projeto (criar, editar, reordenar, ativar/desativar, excluir com migração)
 - Layout responsivo desktop/mobile
 
 ## Estrutura
@@ -79,6 +80,9 @@ npm run dev
    - `supabase/migrations/20260301111000_rls_policies.sql`
    - `supabase/migrations/20260301112000_storage.sql`
    - `supabase/migrations/20260301113000_activity_triggers.sql`
+   - `supabase/migrations/20260301220000_fix_task_activity_actor.sql`
+   - `supabase/migrations/20260302200000_dynamic_workflow_stages.sql`
+   - `supabase/migrations/20260302201000_workflow_stages_rls.sql`
 3. Execute `supabase/seed.sql` para popular workspace/projeto/tarefa inicial.
 4. Em **Authentication > Providers**, habilite Email/Password.
 5. Em **Storage**, confirme bucket `task-attachments`.
